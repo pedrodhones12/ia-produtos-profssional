@@ -1,13 +1,29 @@
+
+
 import express from "express";
 import cors from "cors";
 import OpenAI from "openai";
+import path from "path";
+import { fileURLToPath } from "url";
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
+// necessário para usar path com ESModules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// 🔥 SERVIR ARQUIVOS ESTÁTICOS (HTML, CSS, JS)
+app.use(express.static(__dirname));
+
+// 🔥 ROTA PRINCIPAL (resolve o erro Cannot GET /)
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "index.html"));
+});
+
 const openai = new OpenAI({
-  apiKey: "SUA_API_KEY_AQUI"
+  apiKey: process.env.OPENAI_API_KEY // ⚠️ MUITO IMPORTANTE (ver abaixo)
 });
 
 app.post("/chat", async (req, res) => {
@@ -42,6 +58,7 @@ Fale sobre:
     });
 
   } catch (error) {
+    console.error(error);
     res.status(500).json({ error: "Erro na IA" });
   }
 });
